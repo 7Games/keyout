@@ -1,5 +1,3 @@
-#include <cstdlib>
-#include <print>
 #include <raylib.h>
 #include <string>
 #include <vector>
@@ -13,6 +11,10 @@
 #define FONT_ACTIVE_COLOUR Color{ 220, 220, 220, 255 }
 #define FONT_UNACTIVE_COLOUR DARKGRAY
 #define BAR_COLOUR WHITE
+#define BALL_COLOUR WHITE
+
+#define INITIAL_BALL_RADIUS 5
+#define INITIAL_BALL_SPEED 2
 
 const unsigned char publicpixel_font[] = {
 #embed "publicpixel.ttf"
@@ -27,6 +29,69 @@ Vector2 operator+(Vector2 const& lhs, Vector2 const& rhs) {
         lhs.y + rhs.y,
     };
 }
+void operator+=(Vector2& lhs, Vector2 const& rhs) {
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+}
+Vector2 operator*(Vector2 const& lhs, float const& rhs) {
+    return {
+        lhs.x * rhs,
+        lhs.y * rhs,
+    };
+}
+Vector2 operator-(Vector2 const& rhs) {
+    return {
+        -rhs.x,
+        -rhs.y,
+    };
+}
+
+class Ball {
+public:
+    Ball(Vector2 position) {
+        m_position = position;
+        m_velocity = { 0, 0 };
+        m_radius   = INITIAL_BALL_RADIUS;
+        m_speed    = INITIAL_BALL_SPEED;
+    }
+
+    void draw(void) {
+        DrawCircleV(m_position, m_radius, BALL_COLOUR);
+    }
+
+    void change_velocity(Vector2 velocity) {
+        m_velocity = velocity;
+    }
+
+    void update(void) {
+        if (m_position.y <= 0) {
+            m_velocity.y = -m_velocity.y;
+            m_position.y = 1;
+        }
+        if (m_position.x <= 0) {
+            m_velocity.x = -m_velocity.x;
+            m_position.x = 1;
+        }
+        if (m_position.x >= INITIAL_WINDOW_WIDTH) {
+            m_velocity.x = -m_velocity.x;
+            m_position.x = INITIAL_WINDOW_WIDTH - 1;
+        }
+        if (m_position.y > INITIAL_WINDOW_HEIGHT + m_radius) {
+            CloseWindow();
+        }
+
+        m_position += (m_velocity * m_speed);
+    }
+
+    Vector2 get_position(void) { return m_position; }
+    int get_radius(void) { return m_radius; }
+    Vector2 get_velocity(void) { return m_velocity; }
+private:
+    Vector2 m_position;
+    Vector2 m_velocity;
+    int m_radius;
+    float m_speed;
+};
 
 class Key {
 public:
@@ -110,6 +175,23 @@ public:
             }
         }
     }
+
+    bool is_point_in_line(Ball& ball) {
+        static Vector2 half_point{ HALF_FONT_SIZE, HALF_FONT_SIZE };
+        if (key1 == nullptr || key2 == nullptr) return false;
+        if (CheckCollisionCircleLine(ball.get_position(),
+                                     ball.get_radius(),
+                                     key1->position + half_point,
+                                     key2->position + half_point)) return true;
+        return false;
+    }
+
+    void pop_line(void) {
+        key1->deactivate();
+        key2->deactivate();
+        key1 = nullptr;
+        key2 = nullptr;
+    }
 private:
     void draw_lines(void) {
         static Vector2 half_point{ HALF_FONT_SIZE, HALF_FONT_SIZE };
@@ -173,17 +255,25 @@ int main(void) {
     if (!IsFontValid(font)) return 1;
 
     KeyManager km{};
+    Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}};
+    ball.change_velocity({ 1, 1 });
 
     while (!WindowShouldClose()) {
         // Update
-
         km.update();
+        ball.update();
+
+        if (km.is_point_in_line(ball)) {
+            ball.change_velocity(-ball.get_velocity());
+            km.pop_line();
+        }
+
 
         // Render
         BeginDrawing(); {
             ClearBackground(BLACK);
-
             km.draw(font);
+            ball.draw();
         } EndDrawing();
     }
 
