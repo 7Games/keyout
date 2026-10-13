@@ -1,6 +1,12 @@
+#include <cstdlib>
+#include <print>
 #include <raylib.h>
 #include <string>
 #include <vector>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #define INITIAL_WINDOW_WIDTH  490
 #define INITIAL_WINDOW_HEIGHT 500
@@ -10,17 +16,33 @@
 
 #define FONT_ACTIVE_COLOUR Color{ 220, 220, 220, 255 }
 #define FONT_UNACTIVE_COLOUR DARKGRAY
-#define BAR_COLOUR WHITE
-#define BALL_COLOUR WHITE
+#define BAR_COLOUR   WHITE
+#define BALL_COLOUR  WHITE
+#define BLOCK_COLOUR WHITE
 
 #define INITIAL_BALL_RADIUS 5
-#define INITIAL_BALL_SPEED 2
+#define INITIAL_BALL_SPEED  2
+
+#define BLOCK_WIDTH  80
+#define BLOCK_HEIGHT 40
+
+// Assets
 
 const unsigned char publicpixel_font[] = {
 #embed "publicpixel.ttf"
 };
 const unsigned char credits[] = {
 #embed "credits.csv"
+};
+
+// Audio
+
+const unsigned char file_key_pressed[] = {
+#embed "keypressed.ogg"
+};
+
+const unsigned char file_hit[] = {
+#embed "hit.ogg"
 };
 
 Vector2 operator+(Vector2 const& lhs, Vector2 const& rhs) {
@@ -45,39 +67,73 @@ Vector2 operator-(Vector2 const& rhs) {
         -rhs.y,
     };
 }
+bool operator==(Vector2 const& lhs, Vector2 const& rhs) {
+    return (lhs.x == rhs.x) && (lhs.y == rhs.y);
+}
+
+class Block {
+public:
+    Block(Vector2 position) {
+        m_rect = Rectangle{
+            position.x,
+            position.y,
+            BLOCK_WIDTH,
+            BLOCK_HEIGHT,
+        };
+    }
+
+    void draw(void) {
+        DrawRectangleRec(m_rect, BLOCK_COLOUR);
+    }
+private:
+    Rectangle m_rect;
+};
+
+static Vector2 Vector2Up{ 0, -1 };
+static Vector2 Vector2Down{ 0, 1 };
+static Vector2 Vector2Left{ -1, 0 };
+static Vector2 Vector2Right{ 1, 0 };
 
 class Ball {
 public:
-    Ball(Vector2 position) {
+    Ball(Vector2 position, Sound sfx_hit) {
         m_position = position;
         m_velocity = { 0, 0 };
         m_radius   = INITIAL_BALL_RADIUS;
         m_speed    = INITIAL_BALL_SPEED;
+        m_sfx_hit  = sfx_hit;
     }
 
     void draw(void) {
         DrawCircleV(m_position, m_radius, BALL_COLOUR);
     }
 
-    void change_velocity(Vector2 velocity) {
-        m_velocity = velocity;
+    // direction = dir of what it the ball
+    void bounce(Vector2 direction) {
+        if (direction == Vector2Up || direction == Vector2Down) {
+            m_velocity.y = -m_velocity.y;
+        } else if (direction == Vector2Left || direction == Vector2Right) {
+            m_velocity.x = -m_velocity.x;
+        }
+        PlaySound(m_sfx_hit);
     }
 
     void update(void) {
         if (m_position.y <= 0) {
-            m_velocity.y = -m_velocity.y;
+            bounce(Vector2Up); // hit from above
             m_position.y = 1;
         }
         if (m_position.x <= 0) {
-            m_velocity.x = -m_velocity.x;
+            bounce(Vector2Left); // hit from side
             m_position.x = 1;
         }
         if (m_position.x >= INITIAL_WINDOW_WIDTH) {
-            m_velocity.x = -m_velocity.x;
+            bounce(Vector2Right); // hit from other side
             m_position.x = INITIAL_WINDOW_WIDTH - 1;
         }
         if (m_position.y > INITIAL_WINDOW_HEIGHT + m_radius) {
-            CloseWindow();
+            m_position = { (INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10 };
+            m_velocity = { 1, 1 };
         }
 
         m_position += (m_velocity * m_speed);
@@ -86,11 +142,13 @@ public:
     Vector2 get_position(void) { return m_position; }
     int get_radius(void) { return m_radius; }
     Vector2 get_velocity(void) { return m_velocity; }
+    void set_velocity(Vector2 velocity) { m_velocity = velocity; }
 private:
     Vector2 m_position;
     Vector2 m_velocity;
     int m_radius;
     float m_speed;
+    Sound m_sfx_hit;
 };
 
 class Key {
@@ -125,11 +183,13 @@ public:
 
 class KeyManager {
 public:
-    KeyManager() {
+    KeyManager(Sound& sfx_key_pressed) {
         static std::string char_keys = "QWERTYUIOP\nASDFGHJKL\nZXCVBNM\0";
         float x = 32;
         float y = (INITIAL_WINDOW_HEIGHT / 2.f) + FONT_SIZE;
         int i = 0;
+
+        m_sfx_key_pressed = sfx_key_pressed;
 
         for (char ch : char_keys) {
             if (ch == '\n') {
@@ -172,6 +232,7 @@ public:
                     key2 = nullptr;
                 }
                 key.activate();
+                PlaySound(m_sfx_key_pressed);
             }
         }
     }
@@ -237,7 +298,18 @@ private:
 
     Key* key1 = nullptr;
     Key* key2 = nullptr;
+
+    Sound m_sfx_key_pressed;
 };
+
+#define LOAD_SOUND(snd, sfx_name)                                   \
+    Sound sfx_name;                                                 \
+    do {                                                            \
+        Wave wav = LoadWaveFromMemory(".ogg", snd, sizeof(snd));    \
+        sfx_name = LoadSoundFromWave(wav);                          \
+        if (!IsSoundValid(sfx_name)) exit(-1);                      \
+        UnloadWave(wav);                                            \
+    } while(false)
 
 int main(void) {
     InitWindow(INITIAL_WINDOW_WIDTH,
@@ -245,6 +317,8 @@ int main(void) {
                "Keyout");
     SetWindowMinSize(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
     SetTargetFPS(60);
+
+    InitAudioDevice();
 
     Font font = LoadFontFromMemory(".ttf",
                                    publicpixel_font,
@@ -254,9 +328,15 @@ int main(void) {
                                    250);
     if (!IsFontValid(font)) return 1;
 
-    KeyManager km{};
-    Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}};
-    ball.change_velocity({ 1, 1 });
+    LOAD_SOUND(file_key_pressed, sfx_key_pressed);
+    LOAD_SOUND(file_hit, sfx_hit);
+
+    SetSoundVolume(sfx_key_pressed, 0.1f);
+    SetSoundVolume(sfx_hit, 0.1f);
+
+    KeyManager km{sfx_key_pressed};
+    Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, sfx_hit};
+    ball.set_velocity({ 1, 1 });
 
     while (!WindowShouldClose()) {
         // Update
@@ -264,10 +344,9 @@ int main(void) {
         ball.update();
 
         if (km.is_point_in_line(ball)) {
-            ball.change_velocity(-ball.get_velocity());
+            ball.bounce(Vector2Down);
             km.pop_line();
         }
-
 
         // Render
         BeginDrawing(); {
@@ -277,8 +356,10 @@ int main(void) {
         } EndDrawing();
     }
 
+    UnloadSound(sfx_key_pressed);
     UnloadFont(font);
     CloseWindow();
+    CloseAudioDevice();
 
     return 0;
 }
