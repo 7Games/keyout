@@ -61,67 +61,24 @@ public:
 class KeyManager {
 public:
     KeyManager() {
+        static std::string char_keys = "QWERTYUIOP\nASDFGHJKL\nZXCVBNM\0";
         float x = 32;
         float y = (INITIAL_WINDOW_HEIGHT / 2.f) + FONT_SIZE;
+        int i = 0;
 
-        // Yes we doing it manually lmao
-        // Row 1
-        m_keys.push_back(Key{ 'Q', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'W', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'E', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'R', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'T', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'Y', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'U', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'I', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'O', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'P', { x, y } });
-        // Row 2
-        y += FONT_SIZE * 2;
-        x = 48;
-        m_keys.push_back(Key{ 'A', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'S', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'D', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'F', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'G', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'H', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'J', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'K', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'L', { x, y } });
-        x += FONT_SIZE + 12;
-        // Row 3
-        y += FONT_SIZE * 2;
-        x = 92;
-        m_keys.push_back(Key{ 'Z', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'X', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'C', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'V', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'B', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'N', { x, y } });
-        x += FONT_SIZE + 12;
-        m_keys.push_back(Key{ 'M', { x, y } });
+        for (char ch : char_keys) {
+            if (ch == '\n') {
+                i++;
+                x = 32 + ((i == 1) ? 20 : 52); // lmao
+                y += FONT_SIZE * 2;
+                continue;
+            } else if (ch == '\0') {
+                break;
+            }
+
+            m_keys.push_back(Key{ ch, { x, y } });
+            x += FONT_SIZE + 12;
+        }
     }
 
     void draw(Font const& font) {
@@ -199,8 +156,6 @@ private:
     Key* key1 = nullptr;
     Key* key2 = nullptr;
 };
-
-// #define KEYBOARD "ZXCVBNM\nASDFGHJKL\nQWERTYUIOP\0"
 
 int main(void) {
     InitWindow(INITIAL_WINDOW_WIDTH,
