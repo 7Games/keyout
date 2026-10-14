@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <print>
 #include <raylib.h>
+#include <raymath.h>
 #include <string>
 #include <vector>
 
@@ -45,30 +46,11 @@ const unsigned char file_hit[] = {
 #embed "hit.ogg"
 };
 
-Vector2 operator+(Vector2 const& lhs, Vector2 const& rhs) {
-    return {
-        lhs.x + rhs.x,
-        lhs.y + rhs.y,
-    };
-}
-void operator+=(Vector2& lhs, Vector2 const& rhs) {
-    lhs.x += rhs.x;
-    lhs.y += rhs.y;
-}
-Vector2 operator*(Vector2 const& lhs, float const& rhs) {
-    return {
-        lhs.x * rhs,
-        lhs.y * rhs,
-    };
-}
 Vector2 operator-(Vector2 const& rhs) {
     return {
         -rhs.x,
         -rhs.y,
     };
-}
-bool operator==(Vector2 const& lhs, Vector2 const& rhs) {
-    return (lhs.x == rhs.x) && (lhs.y == rhs.y);
 }
 
 class Block {
