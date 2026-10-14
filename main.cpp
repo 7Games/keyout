@@ -313,8 +313,8 @@ int main(void) {
     LOAD_SOUND(file_key_pressed, sfx_key_pressed);
     LOAD_SOUND(file_hit, sfx_hit);
 
-    SetSoundVolume(sfx_key_pressed, 0.1f);
-    SetSoundVolume(sfx_hit, 0.1f);
+    SetSoundVolume(sfx_key_pressed, 0.5f);
+    SetSoundVolume(sfx_hit, 0.5f);
 
     KeyManager km{sfx_key_pressed};
     Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, sfx_hit};
