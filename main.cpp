@@ -96,6 +96,8 @@ public:
             m_velocity.y = -m_velocity.y;
         } else if (direction == Vector2Left || direction == Vector2Right) {
             m_velocity.x = -m_velocity.x;
+        } else {
+            m_velocity += direction;
         }
         PlaySound(m_sfx_hit);
     }
@@ -186,6 +188,13 @@ public:
             m_keys.push_back(Key{ ch, { x, y } });
             x += FONT_SIZE + 12;
         }
+    }
+
+    Vector2 get_normal_of_paddle() {
+        if (key1 == nullptr || key2 == nullptr) return Vector2{ 0, 0 };
+        Vector2 paddle_vector = key2->position - key1->position;
+        Vector2 paddle_normal = { -paddle_vector.y, paddle_vector.x };
+        return Vector2Normalize(paddle_normal);
     }
 
     void draw(Font const& font) {
@@ -318,7 +327,7 @@ int main(void) {
 
     KeyManager km{sfx_key_pressed};
     Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, sfx_hit};
-    ball.set_velocity({ 1, 1 });
+    ball.set_velocity({ 0.5, 1 });
 
     while (!WindowShouldClose()) {
         // Update
@@ -326,7 +335,8 @@ int main(void) {
         ball.update();
 
         if (km.is_point_in_line(ball)) {
-            ball.bounce(Vector2Down);
+            Vector2 normal = km.get_normal_of_paddle();
+            ball.set_velocity(Vector2Reflect(ball.get_velocity(), normal));
             km.pop_line();
         }
 
