@@ -8,6 +8,8 @@ OUT     := keyout
 keyout: src/main.cpp src/sound.cpp src/ball.cpp
 	$(CXX) $(CFLAGS) $(CLINK) $(SOURCES) -o $(OUT)
 
-.PHONY: run
+.PHONY: run clean
+clean: $(out)
+	rm ./$(OUT)
 run: $(OUT)
 	./$(OUT)
