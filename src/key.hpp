@@ -48,24 +48,23 @@ class KeyManager {
 public:
     KeyManager() {
         static std::string char_keys = "QWERTYUIOP\nASDFGHJKL\nZXCVBNM\0";
-        float x = 32;
+        float x = 10;
         float y = (WINDOW_HEIGHT / 2.f) + FONT_SIZE;
         int i = 0;
 
         for (char ch : char_keys) {
             if (ch == '\n') {
+                x = 10 + ((i == 0) ? 25 : 70); // lmao
+                y += FONT_SIZE * 2.5;
                 i++;
-                x = 32 + ((i == 1) ? 20 : 52); // lmao
-                y += FONT_SIZE * 2;
                 continue;
             } else if (ch == '\0') {
                 break;
             }
 
             m_keys.push_back(Key{ ch, { x, y } });
-            x += FONT_SIZE + 12;
+            x += FONT_SIZE + 17;
         }
-
 
         m_font = LoadFontFromMemory(".ttf",
                                     publicpixel_font,
