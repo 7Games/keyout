@@ -9,10 +9,11 @@ SoundManager& SoundManager::get(void) {
     return sm;
 }
 
-void SoundManager::unload_all_sounds(void) {
+void SoundManager::remove_all_sounds(void) {
     for (auto& sfx : m_sfx) {
         UnloadSound(sfx.second);
     }
+    m_sfx.clear();
 }
 
 void SoundManager::add_sound(const unsigned char* sfx_mem, std::size_t sfx_mem_size, std::string sfx_name) {

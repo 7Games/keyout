@@ -1,34 +1,16 @@
-#include <algorithm>
 #include <cstdlib>
-#include <print>
 #include <raylib.h>
 #include <raymath.h>
 #include <string>
 #include <vector>
 
 #include "sound.hpp"
+#include "ball.hpp"
+#include "misc.hpp"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
-
-#define WINDOW_WIDTH  490
-#define WINDOW_HEIGHT 500
-
-#define FONT_SIZE 32
-#define HALF_FONT_SIZE (FONT_SIZE / 2)
-
-#define FONT_ACTIVE_COLOUR Color{ 220, 220, 220, 255 }
-#define FONT_UNACTIVE_COLOUR DARKGRAY
-#define BAR_COLOUR   WHITE
-#define BALL_COLOUR  WHITE
-#define BLOCK_COLOUR WHITE
-
-#define INITIAL_BALL_RADIUS 5
-#define INITIAL_BALL_SPEED  2
-
-#define BLOCK_WIDTH  80
-#define BLOCK_HEIGHT 40
 
 // Assets
 
@@ -51,106 +33,6 @@ const unsigned char file_hit[] = {
 
 const unsigned char file_blockbreak[] = {
 #embed "../res/blockbreak.ogg"
-};
-
-Vector2 operator-(Vector2 const& rhs) {
-    return {
-        -rhs.x,
-        -rhs.y,
-    };
-}
-
-static Vector2 Vector2Up{ 0, -1 };
-static Vector2 Vector2Down{ 0, 1 };
-static Vector2 Vector2Left{ -1, 0 };
-static Vector2 Vector2Right{ 1, 0 };
-
-class Block {
-public:
-    Block(Vector2 position) {
-        m_rect = Rectangle{
-            position.x,
-            position.y,
-            BLOCK_WIDTH,
-            BLOCK_HEIGHT,
-        };
-    }
-
-    void draw(void) {
-        DrawRectangleRec(m_rect, BLOCK_COLOUR);
-    }
-private:
-    Rectangle m_rect;
-
-};
-
-class BlockManager {
-public:
-    BlockManager() {
-    }
-
-    void break_block(std::size_t id) {
-        m_blocks.erase(m_blocks.begin() + id);
-    }
-private:
-    std::vector<Block> m_blocks;
-};
-
-class Ball {
-public:
-    Ball(Vector2 position) {
-        m_position = position;
-        m_velocity = { 0, 0 };
-        m_radius   = INITIAL_BALL_RADIUS;
-        m_speed    = INITIAL_BALL_SPEED;
-    }
-
-    void draw(void) {
-        DrawCircleV(m_position, m_radius, BALL_COLOUR);
-    }
-
-    // direction = dir of what it the ball
-    void bounce(Vector2 direction) {
-        if (direction == Vector2Up || direction == Vector2Down) {
-            m_velocity.y = -m_velocity.y;
-        } else if (direction == Vector2Left || direction == Vector2Right) {
-            m_velocity.x = -m_velocity.x;
-        } else {
-            m_velocity += direction;
-        }
-        SoundManager::get().play_sound("hit");
-    }
-
-    void update(void) {
-        if (m_position.y <= 0) {
-            bounce(Vector2Up); // hit from above
-            m_position.y = 1;
-        }
-        if (m_position.x <= 0) {
-            bounce(Vector2Left); // hit from side
-            m_position.x = 1;
-        }
-        if (m_position.x >= WINDOW_WIDTH) {
-            bounce(Vector2Right); // hit from other side
-            m_position.x = WINDOW_WIDTH - 1;
-        }
-        if (m_position.y > WINDOW_HEIGHT + m_radius) {
-            m_position = { (WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10 };
-            m_velocity = { 1, 1 };
-        }
-
-        m_position += (m_velocity * m_speed);
-    }
-
-    Vector2 get_position(void) { return m_position; }
-    int get_radius(void) { return m_radius; }
-    Vector2 get_velocity(void) { return m_velocity; }
-    void set_velocity(Vector2 velocity) { m_velocity = velocity; }
-private:
-    Vector2 m_position;
-    Vector2 m_velocity;
-    int m_radius;
-    float m_speed;
 };
 
 class Key {
@@ -204,6 +86,20 @@ public:
             m_keys.push_back(Key{ ch, { x, y } });
             x += FONT_SIZE + 12;
         }
+
+
+        m_font = LoadFontFromMemory(".ttf",
+                                    publicpixel_font,
+                                    sizeof(publicpixel_font),
+                                    FONT_SIZE,
+                                    nullptr,
+                                    250);
+        if (!IsFontValid(m_font)) exit(1);
+    }
+
+    void unload() {
+        m_keys.clear();
+        UnloadFont(m_font);
     }
 
     Vector2 get_normal_of_paddle() {
@@ -213,9 +109,9 @@ public:
         return Vector2Normalize(paddle_normal);
     }
 
-    void draw(Font const& font) {
+    void draw(void) {
         for (Key& key : m_keys) {
-            key.draw(font);
+            key.draw(m_font);
         }
         draw_lines();
     }
@@ -261,6 +157,8 @@ public:
         key2 = nullptr;
     }
 private:
+    Font m_font;
+
     void draw_lines(void) {
         static Vector2 half_point{ HALF_FONT_SIZE, HALF_FONT_SIZE };
         static int point_radius = 5;
@@ -318,18 +216,8 @@ int main(void) {
 
     SoundManager& sm = SoundManager::get();
 
-    Font font = LoadFontFromMemory(".ttf",
-                                   publicpixel_font,
-                                   sizeof(publicpixel_font),
-                                   FONT_SIZE,
-                                   nullptr,
-                                   250);
-    if (!IsFontValid(font)) return 1;
-
     KeyManager km{};
-    BlockManager bm{};
-    Ball ball{{(WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}};
-    ball.set_velocity({ 0.5, 1 });
+    Ball ball{{(WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, INITIAL_BALL_VELOCITY};
 
     sm.add_sound(file_key_pressed, sizeof(file_key_pressed), "key_pressed");
     sm.add_sound(file_hit, sizeof(file_hit), "hit");
@@ -354,12 +242,13 @@ int main(void) {
         // Render
         BeginDrawing(); {
             ClearBackground(BLACK);
-            km.draw(font);
+            km.draw();
             ball.draw();
         } EndDrawing();
     }
 
-    UnloadFont(font);
+    sm.remove_all_sounds();
+    km.unload();
     CloseWindow();
     CloseAudioDevice();
 

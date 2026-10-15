@@ -14,7 +14,7 @@ class SoundManager {
 public:
     static SoundManager& get(void);
 
-    void  unload_all_sounds(void);
+    void  remove_all_sounds(void);
     void  add_sound(const unsigned char* sfx_mem, std::size_t sfx_mem_size, std::string sfx_name);
     void  set_volume(float volume);
     float get_volume(void);

@@ -1,0 +1,23 @@
+#ifndef MISC_HPP_
+#define MISC_HPP_
+
+#define WINDOW_WIDTH  490
+#define WINDOW_HEIGHT 500
+
+#define FONT_SIZE 32
+#define HALF_FONT_SIZE (FONT_SIZE / 2)
+
+#define FONT_ACTIVE_COLOUR   Color{ 220, 220, 220, 255 }
+#define FONT_UNACTIVE_COLOUR DARKGRAY
+
+#define BAR_COLOUR WHITE
+
+#define INITIAL_BALL_RADIUS   5
+#define INITIAL_BALL_COLOUR   WHITE
+#define INITIAL_BALL_VELOCITY { 2.5, 2.5 }
+
+#define BLOCK_WIDTH  80
+#define BLOCK_HEIGHT 40
+#define BLOCK_COLOUR WHITE
+
+#endif // MISC_HPP_
