@@ -1,12 +1,12 @@
-#include <cstdlib>
+#include <optional>
 #include <raylib.h>
 #include <raymath.h>
 #include <string>
-#include <vector>
 
 #include "sound.hpp"
 #include "ball.hpp"
 #include "key.hpp"
+#include "paddle.hpp"
 #include "misc.hpp"
 
 #ifdef __EMSCRIPTEN__
@@ -54,21 +54,26 @@ int main(void) {
 
     load();
 
-    KeyManager km{};
+    Paddle paddle{};
+    KeyManager km{paddle};
     SoundManager& sm = SoundManager::get();
-    Ball ball{{(WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, INITIAL_BALL_VELOCITY};
+    Ball ball{};
+
+    paddle.activate();
+    paddle.move({ 10.f, 300.f }, { WINDOW_WIDTH - 50.f, 300.f });
 
     while (!WindowShouldClose()) {
         // Update
         km.update();
         ball.update();
 
-        if (km.is_point_in_line(ball)) {
-            Vector2 normal = km.get_normal_of_paddle();
-            ball.set_velocity(Vector2Reflect(ball.get_velocity(), normal));
-            km.pop_line();
-            sm.play_sound("hit");
+        if (paddle.is_circle_inside(ball.get_position(), ball.get_radius())) {
+            std::optional<Vector2> normal = paddle.get_normal();
+            if (normal.has_value()) {
+                ball.set_velocity(Vector2Reflect(ball.get_velocity(), normal.value()));
+                km.pop_line();
                 sm.play_sound(SFX_BALL_HIT);
+            }
         }
 
         if (IsKeyPressed(KEY_SPACE)) sm.play_sound(SFX_KEY_PRESSED);
@@ -78,6 +83,7 @@ int main(void) {
             ClearBackground(BLACK);
             km.draw();
             ball.draw();
+            paddle.draw();
         } EndDrawing();
     }
 

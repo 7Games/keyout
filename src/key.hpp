@@ -8,6 +8,7 @@
 
 #include "sound.hpp"
 #include "ball.hpp"
+#include "paddle.hpp"
 #include "misc.hpp"
 
 const unsigned char publicpixel_font[] = {
@@ -17,36 +18,38 @@ const unsigned char publicpixel_font[] = {
 class Key {
 public:
     Key(char ch, Vector2 position) {
-        this->ch = ch;
-        this->position = position;
-        this->is_pressed = false;
+        m_char = ch;
+        m_position = position;
+        m_is_pressed = false;
     }
 
     void draw(Font const& font) {
-        std::string str(1, this->ch);
+        std::string str(1, m_char);
         DrawTextEx(font,
                    str.c_str(),
-                   this->position,
+                   m_position,
                    FONT_SIZE,
                    0,
-                   (this->is_pressed) ?  FONT_ACTIVE_COLOUR : FONT_UNACTIVE_COLOUR);
+                   (m_is_pressed) ?  FONT_ACTIVE_COLOUR : FONT_UNACTIVE_COLOUR);
     }
 
     void activate(void) {
-        this->is_pressed = true;
+        m_is_pressed = true;
     }
     void deactivate(void) {
-        this->is_pressed = false;
+        m_is_pressed = false;
     }
 
-    bool is_pressed;
-    char ch;
-    Vector2 position;
+    char get_char(void) { return m_char; }
+private:
+    bool m_is_pressed;
+    char m_char;
+    Vector2 m_position;
 };
 
 class KeyManager {
 public:
-    KeyManager() {
+    KeyManager(Paddle& paddle) {
         static std::string char_keys = "QWERTYUIOP\nASDFGHJKL\nZXCVBNM\0";
         float x = 10;
         float y = (WINDOW_HEIGHT / 2.f) + FONT_SIZE;
@@ -73,6 +76,8 @@ public:
                                     nullptr,
                                     250);
         if (!IsFontValid(m_font)) exit(1);
+
+        m_paddle = &paddle;
     }
 
     void unload() {
@@ -80,73 +85,55 @@ public:
         UnloadFont(m_font);
     }
 
-    Vector2 get_normal_of_paddle() {
-        if (key1 == nullptr || key2 == nullptr) return Vector2{ 0, 0 };
-        Vector2 paddle_vector = key2->position - key1->position;
-        Vector2 paddle_normal = { -paddle_vector.y, paddle_vector.x };
-        return Vector2Normalize(paddle_normal);
-    }
-
     void draw(void) {
         for (Key& key : m_keys) {
             key.draw(m_font);
         }
-        draw_lines();
     }
 
     void update(void) {
-        for (Key& key : m_keys) {
-            if (IsKeyPressed(KEYBOARD_RAYLIB[key.ch - 'A'])) {
-                if (key1 == nullptr) {
-                    key1 = &key;
-                }
-                else if (key2 == nullptr) {
-                    key2 = &key;
-                    if (key1 == key2) {
-                        key2 = nullptr;
-                    }
-                }
-                else {
-                    key1->deactivate();
-                    key2->deactivate();
-                    key1 = &key;
-                    key2 = nullptr;
-                }
-                key.activate();
-                SoundManager::get().play_sound("key_pressed");
-            }
-        }
-    }
+        // for (Key& key : m_keys) {
+            // if (IsKeyPressed(KEYBOARD_RAYLIB[key.ch - 'A'])) {
+            //     if (key1 == nullptr) {
+            //         key1 = &key;
+            //     }
+            //     else if (key2 == nullptr) {
+            //         key2 = &key;
+            //         if (key1 == key2) {
+            //             key2 = nullptr;
+            //         }
+            //     }
+            //     else {
+            //         key1->deactivate();
+            //         key2->deactivate();
+            //         key1 = &key;
+            //         key2 = nullptr;
+            //         m_paddle->unactivate();
+            //     }
 
-    bool is_point_in_line(Ball& ball) {
-        static Vector2 half_point{ HALF_FONT_SIZE, HALF_FONT_SIZE };
-        if (key1 == nullptr || key2 == nullptr) return false;
-        if (CheckCollisionCircleLine(ball.get_position(),
-                                     ball.get_radius(),
-                                     key1->position + half_point,
-                                     key2->position + half_point)) return true;
-        return false;
+            //     if (key1 != nullptr && key2 != nullptr) {
+            //         m_paddle->move(key1->position, key2->position);
+            //         m_paddle->activate();
+            //     }
+
+            //     key.activate();
+            //     SoundManager::get().play_sound(SFX_KEY_PRESSED);
+            // }
+        // }
     }
 
     void pop_line(void) {
+        if (key1 == nullptr && key2 == nullptr) return;
         key1->deactivate();
         key2->deactivate();
         key1 = nullptr;
         key2 = nullptr;
+        m_paddle->unactivate();
     }
 private:
     Font m_font;
 
-    void draw_lines(void) {
-        static Vector2 half_point{ HALF_FONT_SIZE, HALF_FONT_SIZE };
-        static int point_radius = 5;
-        static int line_thickness = 5;
-        if (key1 != nullptr && key2 != nullptr) {
-            DrawLineEx(key1->position + half_point, key2->position + half_point, line_thickness,  BAR_COLOUR);
-            DrawCircleV(key1->position + half_point, point_radius,  BAR_COLOUR);
-            DrawCircleV(key2->position + half_point, point_radius,  BAR_COLOUR);
-        }
-    }
+    Paddle* m_paddle;
 
     KeyboardKey KEYBOARD_RAYLIB[26] = {
         KEY_A,

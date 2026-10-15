@@ -6,10 +6,13 @@ SOURCES := "src/main.cpp" "src/sound.cpp" "src/ball.cpp"
 OUT     := keyout
 
 keyout: src/main.cpp src/sound.cpp src/ball.cpp
-	$(CXX) $(CFLAGS) $(CLINK) $(SOURCES) -o $(OUT)
+	mkdir -p out
+	$(CXX) $(CFLAGS) $(CLINK) $(SOURCES) -o out/$(OUT)
 
-.PHONY: run clean
-clean: $(out)
-	rm ./$(OUT)
+.PHONY: clean run
+
+clean: $(OUT)
+	rm ./out/$(OUT)
+
 run: $(OUT)
-	./$(OUT)
+	./out/$(OUT)
