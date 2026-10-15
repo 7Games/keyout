@@ -9,7 +9,7 @@
 
 class Paddle {
 public:
-    Paddle() {
+    Paddle(void) {
         m_begin  = { 0, 0 };
         m_end    = { 0, 0 };
         m_active = false;
@@ -20,14 +20,14 @@ public:
         m_end   = end;
     }
 
-    void activate() {
+    void activate(void) {
         m_active = true;
     }
-    void unactivate() {
+    void unactivate(void) {
         m_active = false;
     }
 
-    std::optional<Vector2> get_normal() {
+    std::optional<Vector2> get_normal(void) {
         if (m_active) {};
 
         const Vector2 paddle_vector = m_end - m_begin;
@@ -46,7 +46,11 @@ public:
         return false;
     }
 
-    void draw() {
+    bool is_active(void) {
+        return m_active;
+    }
+
+    void draw(void) {
         static Vector2 half_point{ FONT_SIZE / 2.f, FONT_SIZE / 2.f };
         static int point_radius   = 5;
         static int line_thickness = 5;
