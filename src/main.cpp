@@ -33,6 +33,16 @@ const unsigned char file_blockbreak[] = {
 #embed "../res/blockbreak.ogg"
 };
 
+void load(void) {
+    SoundManager& sm = SoundManager::get();
+
+    sm.add_sound(file_key_pressed, sizeof(file_key_pressed), "key_pressed");
+    sm.add_sound(file_hit, sizeof(file_hit), "hit");
+    sm.add_sound(file_blockbreak, sizeof(file_blockbreak), "block_break");
+
+    sm.set_volume(0.5f);
+}
+
 int main(void) {
     InitWindow(WINDOW_WIDTH,
                WINDOW_HEIGHT,
@@ -42,16 +52,11 @@ int main(void) {
 
     InitAudioDevice();
 
-    SoundManager& sm = SoundManager::get();
+    load();
 
     KeyManager km{};
+    SoundManager& sm = SoundManager::get();
     Ball ball{{(WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, INITIAL_BALL_VELOCITY};
-
-    sm.add_sound(file_key_pressed, sizeof(file_key_pressed), "key_pressed");
-    sm.add_sound(file_hit, sizeof(file_hit), "hit");
-    sm.add_sound(file_blockbreak, sizeof(file_blockbreak), "block_break");
-
-    sm.set_volume(0.5f);
 
     while (!WindowShouldClose()) {
         // Update
