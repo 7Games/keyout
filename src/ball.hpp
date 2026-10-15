@@ -9,11 +9,13 @@
 
 class Ball {
 public:
-    Ball(Vector2 position, Vector2 velocity);
+    Ball(Vector2 position = INITIAL_BALL_POSITION,
+         Vector2 velocity = INITIAL_BALL_VELOCITY);
 
     void draw(void);
     void update(void);
 
+    // Only stuff we need really
     Vector2 get_position(void);
     Vector2 get_velocity(void);
     void set_velocity(Vector2 velocity);
@@ -26,6 +28,8 @@ private:
 
     Color m_colour;
 
+    // tbf we could just grab it every time we need
+    // it but it's better to just grab it once
     SoundManager& sm = SoundManager::get();
 };
 

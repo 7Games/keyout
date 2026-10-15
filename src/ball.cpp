@@ -15,20 +15,20 @@ void Ball::update(void) {
     if (m_position.y <= 0) {
         m_velocity.y = -m_velocity.y;
         m_position.y = 1;
-        sm.play_sound("hit");
+        sm.play_sound(SFX_BALL_HIT);
     }
     if (m_position.x <= 0) {
         m_velocity.x = -m_velocity.x;
         m_position.x = 1;
-        sm.play_sound("hit");
+        sm.play_sound(SFX_BALL_HIT);
     }
     if (m_position.x >= WINDOW_WIDTH) {
         m_velocity.x = -m_velocity.x;
         m_position.x = WINDOW_WIDTH - 1;
-        sm.play_sound("hit");
+        sm.play_sound(SFX_BALL_HIT);
     }
     if (m_position.y > WINDOW_HEIGHT + m_radius) {
-        m_position = { (WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10 };
+        m_position = INITIAL_BALL_POSITION;
         m_velocity = INITIAL_BALL_VELOCITY;
     }
 

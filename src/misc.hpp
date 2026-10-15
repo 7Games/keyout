@@ -20,4 +20,9 @@
 #define BLOCK_HEIGHT 40
 #define BLOCK_COLOUR WHITE
 
+// Asset names
+
+#define SFX_BALL_HIT "hit"
+#define SFX_KEY_PRESSED "key_pressed"
+
 #endif // MISC_HPP_

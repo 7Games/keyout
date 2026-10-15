@@ -68,9 +68,10 @@ int main(void) {
             ball.set_velocity(Vector2Reflect(ball.get_velocity(), normal));
             km.pop_line();
             sm.play_sound("hit");
+                sm.play_sound(SFX_BALL_HIT);
         }
 
-        if (IsKeyPressed(KEY_SPACE)) sm.play_sound("key_pressed");
+        if (IsKeyPressed(KEY_SPACE)) sm.play_sound(SFX_KEY_PRESSED);
 
         // Render
         BeginDrawing(); {
