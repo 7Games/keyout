@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <print>
 #include <raylib.h>
@@ -5,12 +6,14 @@
 #include <string>
 #include <vector>
 
+#include "sound.hpp"
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
-#define INITIAL_WINDOW_WIDTH  490
-#define INITIAL_WINDOW_HEIGHT 500
+#define WINDOW_WIDTH  490
+#define WINDOW_HEIGHT 500
 
 #define FONT_SIZE 32
 #define HALF_FONT_SIZE (FONT_SIZE / 2)
@@ -30,20 +33,24 @@
 // Assets
 
 const unsigned char publicpixel_font[] = {
-#embed "publicpixel.ttf"
+#embed "../res/publicpixel.ttf"
 };
 const unsigned char credits[] = {
-#embed "credits.csv"
+#embed "../res/credits.csv"
 };
 
 // Audio
 
 const unsigned char file_key_pressed[] = {
-#embed "keypressed.ogg"
+#embed "../res/keypressed.ogg"
 };
 
 const unsigned char file_hit[] = {
-#embed "hit.ogg"
+#embed "../res/hit.ogg"
+};
+
+const unsigned char file_blockbreak[] = {
+#embed "../res/blockbreak.ogg"
 };
 
 Vector2 operator-(Vector2 const& rhs) {
@@ -52,6 +59,11 @@ Vector2 operator-(Vector2 const& rhs) {
         -rhs.y,
     };
 }
+
+static Vector2 Vector2Up{ 0, -1 };
+static Vector2 Vector2Down{ 0, 1 };
+static Vector2 Vector2Left{ -1, 0 };
+static Vector2 Vector2Right{ 1, 0 };
 
 class Block {
 public:
@@ -69,21 +81,28 @@ public:
     }
 private:
     Rectangle m_rect;
+
 };
 
-static Vector2 Vector2Up{ 0, -1 };
-static Vector2 Vector2Down{ 0, 1 };
-static Vector2 Vector2Left{ -1, 0 };
-static Vector2 Vector2Right{ 1, 0 };
+class BlockManager {
+public:
+    BlockManager() {
+    }
+
+    void break_block(std::size_t id) {
+        m_blocks.erase(m_blocks.begin() + id);
+    }
+private:
+    std::vector<Block> m_blocks;
+};
 
 class Ball {
 public:
-    Ball(Vector2 position, Sound sfx_hit) {
+    Ball(Vector2 position) {
         m_position = position;
         m_velocity = { 0, 0 };
         m_radius   = INITIAL_BALL_RADIUS;
         m_speed    = INITIAL_BALL_SPEED;
-        m_sfx_hit  = sfx_hit;
     }
 
     void draw(void) {
@@ -99,7 +118,7 @@ public:
         } else {
             m_velocity += direction;
         }
-        PlaySound(m_sfx_hit);
+        SoundManager::get().play_sound("hit");
     }
 
     void update(void) {
@@ -111,12 +130,12 @@ public:
             bounce(Vector2Left); // hit from side
             m_position.x = 1;
         }
-        if (m_position.x >= INITIAL_WINDOW_WIDTH) {
+        if (m_position.x >= WINDOW_WIDTH) {
             bounce(Vector2Right); // hit from other side
-            m_position.x = INITIAL_WINDOW_WIDTH - 1;
+            m_position.x = WINDOW_WIDTH - 1;
         }
-        if (m_position.y > INITIAL_WINDOW_HEIGHT + m_radius) {
-            m_position = { (INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10 };
+        if (m_position.y > WINDOW_HEIGHT + m_radius) {
+            m_position = { (WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10 };
             m_velocity = { 1, 1 };
         }
 
@@ -132,7 +151,6 @@ private:
     Vector2 m_velocity;
     int m_radius;
     float m_speed;
-    Sound m_sfx_hit;
 };
 
 class Key {
@@ -167,13 +185,11 @@ public:
 
 class KeyManager {
 public:
-    KeyManager(Sound& sfx_key_pressed) {
+    KeyManager() {
         static std::string char_keys = "QWERTYUIOP\nASDFGHJKL\nZXCVBNM\0";
         float x = 32;
-        float y = (INITIAL_WINDOW_HEIGHT / 2.f) + FONT_SIZE;
+        float y = (WINDOW_HEIGHT / 2.f) + FONT_SIZE;
         int i = 0;
-
-        m_sfx_key_pressed = sfx_key_pressed;
 
         for (char ch : char_keys) {
             if (ch == '\n') {
@@ -223,7 +239,7 @@ public:
                     key2 = nullptr;
                 }
                 key.activate();
-                PlaySound(m_sfx_key_pressed);
+                SoundManager::get().play_sound("key_pressed");
             }
         }
     }
@@ -289,27 +305,18 @@ private:
 
     Key* key1 = nullptr;
     Key* key2 = nullptr;
-
-    Sound m_sfx_key_pressed;
 };
 
-#define LOAD_SOUND(snd, sfx_name)                                   \
-    Sound sfx_name;                                                 \
-    do {                                                            \
-        Wave wav = LoadWaveFromMemory(".ogg", snd, sizeof(snd));    \
-        sfx_name = LoadSoundFromWave(wav);                          \
-        if (!IsSoundValid(sfx_name)) exit(-1);                      \
-        UnloadWave(wav);                                            \
-    } while(false)
-
 int main(void) {
-    InitWindow(INITIAL_WINDOW_WIDTH,
-               INITIAL_WINDOW_HEIGHT,
+    InitWindow(WINDOW_WIDTH,
+               WINDOW_HEIGHT,
                "Keyout");
-    SetWindowMinSize(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
+    SetWindowMinSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     SetTargetFPS(60);
 
     InitAudioDevice();
+
+    SoundManager& sm = SoundManager::get();
 
     Font font = LoadFontFromMemory(".ttf",
                                    publicpixel_font,
@@ -319,15 +326,16 @@ int main(void) {
                                    250);
     if (!IsFontValid(font)) return 1;
 
-    LOAD_SOUND(file_key_pressed, sfx_key_pressed);
-    LOAD_SOUND(file_hit, sfx_hit);
-
-    SetSoundVolume(sfx_key_pressed, 0.5f);
-    SetSoundVolume(sfx_hit, 0.5f);
-
-    KeyManager km{sfx_key_pressed};
-    Ball ball{{(INITIAL_WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}, sfx_hit};
+    KeyManager km{};
+    BlockManager bm{};
+    Ball ball{{(WINDOW_WIDTH / 2.f) - (INITIAL_BALL_RADIUS / 2.f), 10}};
     ball.set_velocity({ 0.5, 1 });
+
+    sm.add_sound(file_key_pressed, sizeof(file_key_pressed), "key_pressed");
+    sm.add_sound(file_hit, sizeof(file_hit), "hit");
+    sm.add_sound(file_blockbreak, sizeof(file_blockbreak), "block_break");
+
+    sm.set_volume(0.5f);
 
     while (!WindowShouldClose()) {
         // Update
@@ -338,7 +346,10 @@ int main(void) {
             Vector2 normal = km.get_normal_of_paddle();
             ball.set_velocity(Vector2Reflect(ball.get_velocity(), normal));
             km.pop_line();
+            sm.play_sound("hit");
         }
+
+        if (IsKeyPressed(KEY_SPACE)) sm.play_sound("key_pressed");
 
         // Render
         BeginDrawing(); {
@@ -348,7 +359,6 @@ int main(void) {
         } EndDrawing();
     }
 
-    UnloadSound(sfx_key_pressed);
     UnloadFont(font);
     CloseWindow();
     CloseAudioDevice();

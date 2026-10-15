@@ -2,12 +2,12 @@ CXX    := g++
 CFLAGS := -Wall -Werror -Wextra -pedantic -std=c++26
 CLINK  := -lraylib
 
-SOURCES := "main.cpp"
-OUT     := "keyout"
+SOURCES := "src/main.cpp" "src/sound.cpp"
+OUT     := keyout
 
-keyout: main.cpp
+keyout: src/main.cpp src/sound.cpp
 	$(CXX) $(CFLAGS) $(CLINK) $(SOURCES) -o $(OUT)
 
 .PHONY: run
-run: keyout
+run: $(OUT)
 	./$(OUT)
