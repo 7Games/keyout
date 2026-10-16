@@ -45,6 +45,10 @@ const unsigned char file_paddle_break[] = {
 #embed "../res/paddlebreak.ogg"
 };
 
+const unsigned char file_game_over[] = {
+#embed "../res/gameover.ogg"
+};
+
 enum GameState {
     GSTATE_MENU = 0,
     GSTATE_GAME,
@@ -79,6 +83,7 @@ void load(void) {
     sm.add_sound(file_hit, sizeof(file_hit), SFX_BALL_HIT);
     sm.add_sound(file_paddle_break, sizeof(file_paddle_break), SFX_PADDLE_BREAK);
     sm.add_sound(file_brick_break, sizeof(file_brick_break), SFX_BRICK_BREAK);
+    sm.add_sound(file_game_over, sizeof(file_game_over), SFX_GAME_OVER);
 
     sm.set_volume(0.5f);
 
@@ -154,7 +159,7 @@ void update_gameover(void) {
     if (reset_timer > 0) reset_timer -= delta;
     if (reset_timer < 0) reset_timer = 0;
 
-    if (reset_timer == 0 && (GetCharPressed() >= 'A' && GetCharPressed() <= 'Z')) {
+    if (reset_timer == 0 && GetCharPressed() != 0) {
         state = GSTATE_MENU;
     }
 
@@ -201,6 +206,7 @@ void update_game(void) {
 
     if (lives == 0) {
         reset_timer = 0.5;
+        sm.play_sound(SFX_GAME_OVER);
         state = GSTATE_GAMEOVER;
     }
 
@@ -234,7 +240,7 @@ void update_game(void) {
             sm.play_sound(SFX_BALL_HIT);
             sm.play_sound(SFX_BRICK_BREAK);
 
-            score += 10;
+            score += 1;
 
             ball.set_velocity(Vector2Reflect(ball_vel, brick_normal));
         }
@@ -267,6 +273,7 @@ void update_game(void) {
 
     Vector2 last_char_size = MeasureTextEx(font, last_chars.c_str(), 200, 5);
     last_char_size.y += 250;
+    last_char_size.x -= 30;
 
     // Render
     BeginDrawing(); {
@@ -283,17 +290,20 @@ void update_game(void) {
         paddle.draw();
 
         // Draw UI
-        const float lives_size = MeasureText(std::format("Lives: {}  ", lives).c_str(), UI_FONT_SIZE);
-        DrawText(std::format("Lives: {} ", lives).c_str(),
-                 (WINDOW_WIDTH / 2.f) - lives_size,
-                 WINDOW_HEIGHT - UI_FONT_SIZE - 5,
-                 UI_FONT_SIZE,
-                 WHITE);
-        DrawText(std::format("| Score: {}", score).c_str(),
-                 (WINDOW_WIDTH / 2.f),
-                 WINDOW_HEIGHT - UI_FONT_SIZE - 5,
-                 UI_FONT_SIZE,
-                 WHITE);
+        const Vector2 lives_size = MeasureTextEx(font, std::format("Lives:{}", lives).c_str(), UI_FONT_SIZE, 5);
+        DrawTextEx(font, std::format("Lives:{}", lives).c_str(),
+                   {(WINDOW_WIDTH / 2.f) - (lives_size.x + 5),
+                    WINDOW_HEIGHT - UI_FONT_SIZE - 5 },
+                   UI_FONT_SIZE,
+                   5,
+                   WHITE);
+        DrawTextEx(font,
+                   std::format("-Score:{}", score).c_str(),
+                   {(WINDOW_WIDTH / 2.f),
+                    WINDOW_HEIGHT - UI_FONT_SIZE - 5},
+                   UI_FONT_SIZE,
+                   5,
+                   WHITE);
     } EndDrawing();
 }
 

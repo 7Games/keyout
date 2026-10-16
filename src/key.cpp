@@ -100,9 +100,9 @@ void KeyManager::update(void) {
 }
 
 void KeyManager::pop_line(void) {
-    SoundManager::get().play_sound(SFX_PADDLE_BREAK);
-
     if (!m_paddle->is_active()) return;
+
+    SoundManager::get().play_sound(SFX_PADDLE_BREAK);
 
     key1->deactivate();
     key2->deactivate();

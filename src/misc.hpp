@@ -5,7 +5,7 @@
 #define WINDOW_HEIGHT 500
 
 #define FONT_SIZE 32
-#define UI_FONT_SIZE 24
+#define UI_FONT_SIZE 16
 
 #define FONT_ACTIVE_COLOUR   Color{ 220, 220, 220, 255 }
 #define FONT_UNACTIVE_COLOUR DARKGRAY
@@ -36,5 +36,6 @@
 #define SFX_KEY_PRESSED "key_pressed"
 #define SFX_PADDLE_BREAK "paddle_break"
 #define SFX_BRICK_BREAK "brick_break"
+#define SFX_GAME_OVER "game_over"
 
 #endif // MISC_HPP_
