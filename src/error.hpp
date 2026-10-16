@@ -14,11 +14,7 @@ namespace Error {
     inline void crash(std::string error) {
         std::size_t error_size = MeasureText(error.c_str(), ERROR_STRING_SIZE);
 
-#ifdef __EMSCRIPTEN__
-    while(true) {
-#else
-    while (!WindowShouldClose()) {
-#endif
+        while (!WindowShouldClose()) {
             BeginDrawing();
 
             ClearBackground(BLACK);

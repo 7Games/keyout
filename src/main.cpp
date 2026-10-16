@@ -311,6 +311,7 @@ int main(void) {
     InitWindow(WINDOW_WIDTH,
                WINDOW_HEIGHT,
                "Keyout");
+    SetWindowMinSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     SetTargetFPS(60);
     InitAudioDevice();
 
@@ -318,11 +319,7 @@ int main(void) {
 
     srand(time(0));
 
-#ifdef __EMSCRIPTEN__
-    while(true) {
-#else
     while (!WindowShouldClose()) {
-#endif
         switch (state) {
         case GSTATE_MENU:
             update_menu();
