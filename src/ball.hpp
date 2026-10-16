@@ -13,7 +13,7 @@ public:
          Vector2 velocity = INITIAL_BALL_VELOCITY);
 
     void draw(void);
-    void update(void);
+    bool update(void);
 
     // Only stuff we need really
     Vector2 get_position(void);

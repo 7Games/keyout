@@ -25,7 +25,7 @@ KeyManager::KeyManager(Paddle& paddle) {
     for (char ch : char_keys) {
         if (ch == '\n') {
             x = 10 + ((i == 0) ? 25 : 70); // lmao
-            y += FONT_SIZE * 2.5;
+            y += FONT_SIZE * 2.2;
             i++;
             continue;
         } else if (ch == '\0') {
@@ -36,20 +36,15 @@ KeyManager::KeyManager(Paddle& paddle) {
         x += FONT_SIZE + 17;
     }
 
-    m_font = LoadFontFromMemory(".ttf",
-                                publicpixel_font,
-                                sizeof(publicpixel_font),
-                                FONT_SIZE,
-                                nullptr,
-                                250);
-    if (!IsFontValid(m_font)) Error::crash("Couldn't load font");
-
     m_paddle = &paddle;
+}
+
+void KeyManager::load_font(Font& font) {
+    m_font = font;
 }
 
 void KeyManager::unload() {
     m_keys.clear();
-    UnloadFont(m_font);
 }
 
 void KeyManager::draw(void) {
@@ -99,13 +94,13 @@ void KeyManager::update(void) {
             }
 
             key.activate();
-            sm.play_sound(SFX_KEY_PRESSED);
+            SoundManager::get().play_sound(SFX_KEY_PRESSED);
         }
     }
 }
 
 void KeyManager::pop_line(void) {
-    sm.play_sound(SFX_PADDLE_BREAK);
+    SoundManager::get().play_sound(SFX_PADDLE_BREAK);
 
     if (!m_paddle->is_active()) return;
 

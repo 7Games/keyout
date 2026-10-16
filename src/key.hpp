@@ -34,6 +34,8 @@ class KeyManager {
 public:
     KeyManager(Paddle& paddle);
 
+    void load_font(Font& font);
+
     void draw(void);
     void update(void);
 
@@ -57,8 +59,6 @@ private:
 
     Key* key1 = nullptr;
     Key* key2 = nullptr;
-
-    SoundManager sm = SoundManager::get();
 };
 
 #endif // KEY_HPP_

@@ -11,7 +11,7 @@ void Ball::draw(void) {
     DrawCircleV(m_position, m_radius, m_colour);
 }
 
-void Ball::update(void) {
+bool Ball::update(void) {
     if (m_position.y <= 0) {
         m_velocity.y = -m_velocity.y;
         m_position.y = 1;
@@ -30,9 +30,11 @@ void Ball::update(void) {
     if (m_position.y > WINDOW_HEIGHT + m_radius) {
         m_position = INITIAL_BALL_POSITION;
         m_velocity = INITIAL_BALL_VELOCITY;
+        return true;
     }
 
     m_position += m_velocity;
+    return false;
 }
 
 // Getters and setters
