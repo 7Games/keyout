@@ -1,5 +1,7 @@
+#include <format>
 #include <print>
 
+#include "error.hpp"
 #include "sound.hpp"
 
 // @Section Public
@@ -22,11 +24,10 @@ void SoundManager::add_sound(const unsigned char* sfx_mem, std::size_t sfx_mem_s
         return;
     }
 
-    // TODO: Write die wrapper for exit
     Wave wav = LoadWaveFromMemory(".ogg", sfx_mem, sfx_mem_size);
-    if (!IsWaveValid(wav)) exit(-1);
+    if (!IsWaveValid(wav)) Error::crash(std::format("Couldn't load sound data for:\n`{}`", sfx_name));
     Sound sfx = LoadSoundFromWave(wav);
-    if (!IsSoundValid(sfx)) exit(-1);
+    if (!IsSoundValid(sfx)) Error::crash(std::format("Not valid sound:\n`{}`", sfx_name));
     UnloadWave(wav);
 
     SetSoundVolume(sfx, m_volume);

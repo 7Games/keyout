@@ -3,12 +3,10 @@
 
 #include <raylib.h>
 #include <raymath.h>
-#include <string>
 #include <vector>
 
 #include "sound.hpp"
 #include "paddle.hpp"
-#include "misc.hpp"
 
 const unsigned char publicpixel_font[] = {
 #embed "../res/publicpixel.ttf"

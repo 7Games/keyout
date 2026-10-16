@@ -2,7 +2,6 @@
 #include <optional>
 #include <raylib.h>
 #include <raymath.h>
-#include <string>
 #include <vector>
 
 #include "sound.hpp"
@@ -79,7 +78,11 @@ int main(void) {
         y++;
     }
 
+#ifdef __EMSCRIPTEN__
+    while(true) {
+#else
     while (!WindowShouldClose()) {
+#endif
         // Update
         km.update();
         ball.update();

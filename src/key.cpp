@@ -1,5 +1,6 @@
 #include <raylib.h>
 
+#include "error.hpp"
 #include "key.hpp"
 
 Key::Key(char ch, Vector2 position) {
@@ -41,7 +42,7 @@ KeyManager::KeyManager(Paddle& paddle) {
                                 FONT_SIZE,
                                 nullptr,
                                 250);
-    if (!IsFontValid(m_font)) exit(1);
+    if (!IsFontValid(m_font)) Error::crash("Couldn't load font");
 
     m_paddle = &paddle;
 }
