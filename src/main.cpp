@@ -102,10 +102,12 @@ void update_menu(void) {
     has_made_brick_in_last_second = false;
 
     km.update();
-    if (GetCharPressed() >= 'A' && GetCharPressed() <= 'Z') {
-        state = GSTATE_GAME;
+
+    char key_press = GetCharPressed();
+    if (key_press >= 'a' && key_press <= 'z') {
         last_chars.erase(last_chars.begin());
-        last_chars.push_back(GetCharPressed());
+        last_chars.push_back(key_press - 32);
+        state = GSTATE_GAME;
     }
 
     static int title_font_size = 32;
@@ -263,15 +265,14 @@ void update_game(void) {
         has_made_brick_in_last_second = false;
     }
 
-    Vector2 last_char_size = MeasureTextEx(font, last_chars.c_str(), 50, 5);
+    Vector2 last_char_size = MeasureTextEx(font, last_chars.c_str(), 200, 5);
+    last_char_size.y += 250;
 
     // Render
     BeginDrawing(); {
         ClearBackground(BLACK);
         // Draw last chars
-        DrawTextEx(font, last_chars.c_str(), Vector2{WINDOW_WIDTH / 2.f, WINDOW_HEIGHT / 2.f} - last_char_size / 2.f, 50, 5, DARKGRAY);
-
-        //
+        DrawTextEx(font, last_chars.c_str(), Vector2{WINDOW_WIDTH / 2.f, WINDOW_HEIGHT / 2.f} - last_char_size / 2.f, 200, 5, Color{20, 20, 20, 255});
 
         for (Brick& b : bricks) {
             b.draw();
