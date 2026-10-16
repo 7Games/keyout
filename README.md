@@ -5,10 +5,9 @@
 ![Licenced under Unlicense](https://img.shields.io/badge/License-Unlicense-black)
 ![Handmade](https://badges.ws/handmade)
 
-<img alt="Cover" src="/res/cover.png" width="300px"/>
+<img alt="Cover" src="./res/cover.png" width="300px"/>
 
-<img alt="Screenshot" src="/res/screenshot-1.png" width="300px"/>
-<img alt="Screenshot" src="/res/screenshot-2.png" width="300px"/>
+<img alt="Screenshot" src="./res/screenshot-1.png" width="300px"/> <img alt="Screenshot" src="./res/screenshot-2.png" width="300px"/>
 
 A remake of a prototype I saw on Twitter. All credits to [Connor Aitken](https://x.com/Aitken_/status/1555922340357328903) for the idea.
 
