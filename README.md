@@ -36,3 +36,5 @@ emcc -I./lib/raylib-6.0_webassembly/include/ ./lib/raylib-6.0_webassembly/lib/li
 ## License
 
 This code is licenced under the [UNLICENSE](https://unlicense.org/). All assets source or created by myself are licenced under [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+Raylib licenced under a unmodified zlib/libpng, see more information at `/lib/raylib-6.0_webassembly/LICENSE`
